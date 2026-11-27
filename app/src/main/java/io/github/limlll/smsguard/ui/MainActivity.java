@@ -52,7 +52,11 @@ public final class MainActivity extends Activity {
                 })
                 .setNegativeButton("取消", null)
                 .show());
+        Button selfTest = new Button(this);
+        selfTest.setText("自检");
+        selfTest.setOnClickListener(v -> runSelfTest(selfTest));
         LinearLayout buttons = new LinearLayout(this);
+        buttons.addView(selfTest);
         buttons.addView(refresh);
         buttons.addView(clear);
 
@@ -94,6 +98,26 @@ public final class MainActivity extends Activity {
         recordsView.setText(text);
     }
 
+    private void runSelfTest(Button trigger) {
+        trigger.setEnabled(false);
+        new Thread(() -> {
+            String report = SelfTest.run(getContentResolver());
+            runOnUiThread(() -> {
+                trigger.setEnabled(true);
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                new AlertDialog.Builder(this)
+                        .setTitle("漏洞自检")
+                        .setMessage(report)
+                        .setPositiveButton("好", null)
+                        .show();
+                // The hook's broadcast may land shortly after the probe returns.
+                recordsView.postDelayed(this::render, 1_000);
+            });
+        }, "smsguard-selftest").start();
+    }
+
     private String describeStatus(long heartbeatAt) {
         if (heartbeatAt == 0) {
             return "未收到模块心跳。请确认：\n"
@@ -117,6 +141,10 @@ public final class MainActivity extends Activity {
         for (String pkg : record.packages) {
             if (names.length() > 0) {
                 names.append("、");
+            }
+            if (pkg.equals(getPackageName())) {
+                names.append("本应用自检");
+                continue;
             }
             try {
                 names.append(pm.getApplicationInfo(pkg, 0).loadLabel(pm)).append(" (").append(pkg).append(')');
