@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Needed to turn a blocked uid into an app label, including apps without a launcher icon. -->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@android:drawable/ic_lock_idle_lock"
+        android:label="@string/app_name"
+        android:theme="@android:style/Theme.DeviceDefault.DayNight">
+
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="拦截 CVE-2025-10184：阻止无短信权限的应用通过 PushMessage/PushShop/ServiceNumber 组件读取短信" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="93" />
+        <meta-data
+            android:name="xposedscope"
+            android:resource="@array/xposed_scope" />
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Only privileged telephony code can hold this permission, so third-party apps
+             cannot forge or flood intercept records. -->
+        <receiver
+            android:name=".ui.EventReceiver"
+            android:exported="true"
+            android:permission="android.permission.READ_PRIVILEGED_PHONE_STATE">
+            <intent-filter>
+                <action android:name="io.github.limlll.smsguard.action.BLOCKED" />
+                <action android:name="io.github.limlll.smsguard.action.HEARTBEAT" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
