@@ -34,7 +34,6 @@ public final class MainActivity extends Activity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(padding, padding, padding, padding);
-        root.setFitsSystemWindows(true);
 
         statusView = new TextView(this);
         statusView.setTextSize(15);
